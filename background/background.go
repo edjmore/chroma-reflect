@@ -55,7 +55,7 @@ func Colors() ([6][22]int, error) {
 
 	for x := 0; x < 16; x++ {
 		for y := 0; y < 6; y++ {
-			colors[y][x] = averageColor(
+			colors[y][x] = dominantColor(
 				img,
 				b.Intersect(image.Rect(x*w, y*h, (x+1)*w, (y+1)*h)),
 			)
@@ -92,4 +92,25 @@ func averageColor(img image.Image, b image.Rectangle) int {
 
 	area := uint32(b.Dx() * b.Dy())
 	return int((bAvg/area)<<16 | (gAvg/area)<<8 | rAvg/area)
+}
+
+func dominantColor(img image.Image, b image.Rectangle) int {
+	var color, count int
+	bins := make(map[int]int)
+
+	for x := b.Min.X; x < b.Max.X; x++ {
+		for y := b.Min.Y; y < b.Max.Y; y++ {
+			px := img.At(x, y)
+			r, g, b, _ := px.RGBA()
+			bgr := int((b>>8)<<16 | (g>>8)<<8 | (r >> 8))
+
+			bins[bgr] += 1
+			if bins[bgr] > count {
+				color = bgr
+				count = bins[bgr]
+			}
+		}
+	}
+
+	return color
 }
